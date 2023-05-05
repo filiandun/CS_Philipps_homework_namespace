@@ -1,18 +1,48 @@
-﻿namespace GameWithBot
+﻿using System.Runtime.CompilerServices;
+
+namespace GameWithBot
 {
     public class NaughtsAndCrosses
     {
+        private ushort currentRow;
+        private ushort currentColumn;
+        private ushort maxPosition;
+
+        public bool Choice()
+        {
+            ConsoleKeyInfo key;
+            while (true)
+            {
+                key = Console.ReadKey(); // считывание значения нажатой клавиши
+                Console.Clear(); //Console.Write("ХОД ИГРОКА\n(управление стрелочками)\n");
+                switch (key.Key)
+                {
+                    case ConsoleKey.UpArrow: if (this.currentRow - 1 >= 0) { --this.currentRow; }; this.ShowField((short) this.currentRow, (short) this.currentColumn); break; // нажата клавиша вверх
+                    case ConsoleKey.DownArrow: if (this.currentRow + 1 < this.maxPosition) { ++this.currentRow; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша вниз
+                    case ConsoleKey.RightArrow: if (this.currentColumn + 1 < this.maxPosition) { ++this.currentColumn; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша вправо
+                    case ConsoleKey.LeftArrow: if (this.currentColumn - 1 >= 0) { --this.currentColumn; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша влево
+                    case ConsoleKey.Enter: if (this.EditField(this.currentRow, this.currentColumn, 'X')) { return true; } return false; // нажата клавиша enter
+
+                    default: this.ShowField((short)this.currentRow, (short)this.currentColumn); break;
+                }
+            }
+        }
+
+
         private ushort fieldSize;
         private char[,] field;
 
         public NaughtsAndCrosses() 
         {
             this.fieldSize = 3;
-            this.field = new char[fieldSize, fieldSize];
+            this.currentRow = 0;
+            this.currentColumn = 0;
+            this.maxPosition = this.fieldSize;
 
-            for (int i = 0; i < fieldSize; ++i)
+            this.field = new char[this.fieldSize, this.fieldSize];
+            for (int i = 0; i < this.fieldSize; ++i)
             {
-                for (int j = 0; j < fieldSize; ++j)
+                for (int j = 0; j < this.fieldSize; ++j)
                 {
                     this.field[i, j] = ' ';
                 }
@@ -28,30 +58,47 @@
 
             char player = 'X';
             char bot = 'O';
-            int temp = 1;
 
-            while (!FindWinner())
+            Random random = new Random();
+            ushort tempRow;
+            ushort tempColumn;
+
+            for (int i = 0; i < this.fieldSize * this.fieldSize && FindWinner() == false; ++i)
+            //while (!FindWinner())
             {
-                //Console.Clear();
                 this.ShowField();
 
-                Console.Write("\nВаш ход: ");
-                temp = Convert.ToInt32(Console.ReadLine());
-
-                while (!this.EditField(temp, player))
+                bool temp = true;
+                ConsoleKeyInfo key;
+                while (temp == true)
                 {
-                    Console.Write("Эта клетка занята, ваш ход: ");
-                    temp = Convert.ToInt32(Console.ReadLine());
+                    key = Console.ReadKey(); // считывание значения нажатой клавиши
+                    Console.Clear(); Console.Write("ХОД ИГРОКА\n\n");
+                    switch (key.Key)
+                    {
+                        case ConsoleKey.UpArrow: if (this.currentRow - 1 >= 0) { --this.currentRow; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша вверх
+                        case ConsoleKey.DownArrow: if (this.currentRow + 1 < this.maxPosition) { ++this.currentRow; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша вниз
+                        case ConsoleKey.RightArrow: if (this.currentColumn + 1 < this.maxPosition) { ++this.currentColumn; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша вправо
+                        case ConsoleKey.LeftArrow: if (this.currentColumn - 1 >= 0) { --this.currentColumn; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша влево
+                        case ConsoleKey.Enter: if (this.EditField(this.currentRow, this.currentColumn, player)) { temp = false; break; } Console.WriteLine("ЭТА КЛЕТКА ЗАНЯТА!"); break; // нажата клавиша enter
+
+                        default: this.ShowField((short) this.currentRow, (short) this.currentColumn); break;
+                    }
                 }
 
-                Random random = new Random();
-                temp = random.Next(0, 8);
-                while (!this.EditField(temp, bot))
+
+                tempRow = (ushort )random.Next(0, this.fieldSize);
+                tempColumn = (ushort) random.Next(0, this.fieldSize);
+
+                while (!this.EditField(tempRow, tempColumn, bot))
                 {
-                    temp = random.Next(0, 8);
+                    tempRow = (ushort)random.Next(0, this.fieldSize);
+                    tempColumn = (ushort)random.Next(0, this.fieldSize);
                 }
-                Console.Write($"Ход противника: {temp}\n");
             }
+
+            Console.WriteLine("\nНичья!");
+            return;
         }
 
         private bool FindWinner()
@@ -65,12 +112,13 @@
                 (this.field[0, 2] == 'X' && this.field[1, 2] == 'X' && this.field[2, 2] == 'X') ||
 
                 (this.field[0, 0] == 'X' && this.field[1, 1] == 'X' && this.field[2, 2] == 'X') ||
-                (this.field[0, 2] == 'X' && this.field[1, 1] == 'X' && this.field[2, 0] == 'X'))
+                (this.field[2, 0] == 'X' && this.field[1, 1] == 'X' && this.field[0, 2] == 'X'))
             {
                 this.ShowField();
-                Console.Write("\nВы выиграли!");
+                Console.Write("\nИгрок выиграл!");
                 return true;
             }
+
 
             if ((this.field[0, 0] == 'O' && this.field[0, 1] == 'O' && this.field[0, 2] == 'O') ||
                 (this.field[1, 0] == 'O' && this.field[1, 1] == 'O' && this.field[1, 2] == 'O') ||
@@ -81,52 +129,57 @@
                 (this.field[0, 2] == 'O' && this.field[1, 2] == 'O' && this.field[2, 2] == 'O') ||
 
                 (this.field[0, 0] == 'O' && this.field[1, 1] == 'O' && this.field[2, 2] == 'O') ||
-                (this.field[0, 2] == 'O' && this.field[1, 1] == 'O' && this.field[2, 0] == 'O'))
+                (this.field[2, 0] == 'O' && this.field[1, 1] == 'O' && this.field[0, 2] == 'O'))
             {
                 this.ShowField();
-                Console.Write("\nВы проиграли!");
+                Console.Write("\nБот выиграл!");
                 return true;
             }
 
             return false;
         }
 
-        private bool EditField(int position, char who)
+        public bool EditField(ushort row, ushort column, char who)
         {
-            switch (position)
+            if (this.field[row, column] == ' ')
             {
-                case 1: if (this.field[0, 0] == ' ') { this.field[0, 0] = who; return true; } return false;
-                case 2: if (this.field[0, 1] == ' ') { this.field[0, 1] = who; return true; } return false;
-                case 3: if (this.field[0, 2] == ' ') { this.field[0, 2] = who; return true; } return false;
-
-                case 4: if (this.field[1, 0] == ' ') { this.field[1, 0] = who; return true; } return false;
-                case 5: if (this.field[1, 1] == ' ') { this.field[1, 1] = who; return true; } return false;
-                case 6: if (this.field[1, 2] == ' ') { this.field[1, 2] = who; return true; } return false;
-
-                case 7: if (this.field[2, 0] == ' ') { this.field[2, 0] = who; return true; } return false;
-                case 8: if (this.field[2, 1] == ' ') { this.field[2, 1] = who; return true; } return false;
-                case 9: if (this.field[2, 2] == ' ') { this.field[2, 2] = who; return true; } return false;
-
-                default: return false;
-            }  
+                this.field[row, column] = who;
+                return true;
+            }
+            return false;
         }
 
-        private void ShowField()
+        public void ShowField(short row = -1, short column = -1)
         {
             Console.WriteLine();
-            for (int i = 0; i < this.fieldSize; ++i) 
+            for (int i = 0; i < this.fieldSize; ++i)
             {
                 for (int j = 0; j < this.fieldSize; ++j)
                 {
-                    Console.Write($" {this.field[i, j]}");
+                    if (i == row && j == column)
+                    {
+                        if (this.field[i, j] == ' ') // цвет текущей ячейки меняет, в зависимости, занята ли она 
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green; Console.Write(" *"); Console.ResetColor(); // если свободна, то цвет зелёный
+                        }
 
-                    if (j < this.fieldSize - 1)
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red; Console.Write($" {this.field[i, j]}"); Console.ResetColor(); // если занята, то цвет красный
+                        }
+                    }
+                    else
+                    {
+                        Console.Write($" {this.field[i, j]}");
+                    }
+
+                    if (j < this.fieldSize - 1) // вывод между колонами
                     {
                         Console.Write(" |");
                     }
                 }
 
-                if (i < this.fieldSize - 1) 
+                if (i < this.fieldSize - 1) // вывод между строками
                 {
                     Console.WriteLine();
                     for (int l = 0; l < this.fieldSize; ++l)
@@ -147,10 +200,10 @@
 
 
 /*
-  0 | 0 | 0
- ---|---|---
-  0 | 0 | 0
- ---|---|---
-  0 | 0 | 0
+  0 0 | 0 1 | 0 2
+  --- | --- | ---
+  1 0 | 1 1 | 1 2
+  --- | --- |---
+  2 0 | 2 1 | 2 2
 
 */

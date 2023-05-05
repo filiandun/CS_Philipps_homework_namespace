@@ -26,6 +26,7 @@ namespace namespaces
         {
             GameWithBot.NaughtsAndCrosses naughtsAndCrosses = new GameWithBot.NaughtsAndCrosses();
             naughtsAndCrosses.Playing();
+            //naughtsAndCrosses.ShowField(1, 0);
         }
     }
 }
