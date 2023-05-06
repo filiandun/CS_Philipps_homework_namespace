@@ -24,9 +24,11 @@ namespace namespaces
     {
         static void Main()
         {
-            GameWithBot.NaughtsAndCrosses naughtsAndCrosses = new GameWithBot.NaughtsAndCrosses();
-            naughtsAndCrosses.Playing();
-            //naughtsAndCrosses.ShowField(1, 0);
+            GameWithBot.NaughtsAndCrosses naughtsAndCrossesWithBot = new GameWithBot.NaughtsAndCrosses();
+            naughtsAndCrossesWithBot.Playing();
+
+            GameWithFriend.NaughtsAndCrosses naughtsAndCrossesWithFriend = new GameWithFriend.NaughtsAndCrosses();
+            //naughtsAndCrossesWithFriend.Playing();
         }
     }
 }
