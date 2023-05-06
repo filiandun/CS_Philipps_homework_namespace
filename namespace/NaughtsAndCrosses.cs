@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 
 namespace GameWithBot
 {
@@ -8,32 +9,56 @@ namespace GameWithBot
         private ushort currentColumn;
         private ushort maxPosition;
 
-        public bool Choice()
+        private bool Player()
         {
             ConsoleKeyInfo key;
+
             while (true)
             {
                 key = Console.ReadKey(); // считывание значения нажатой клавиши
-                Console.Clear(); //Console.Write("ХОД ИГРОКА\n(управление стрелочками)\n");
+
+                Console.Clear(); Console.WriteLine("КРЕСТИКИ-НОЛИКИ (ВАШ ХОД)");
                 switch (key.Key)
                 {
-                    case ConsoleKey.UpArrow: if (this.currentRow - 1 >= 0) { --this.currentRow; }; this.ShowField((short) this.currentRow, (short) this.currentColumn); break; // нажата клавиша вверх
-                    case ConsoleKey.DownArrow: if (this.currentRow + 1 < this.maxPosition) { ++this.currentRow; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша вниз
-                    case ConsoleKey.RightArrow: if (this.currentColumn + 1 < this.maxPosition) { ++this.currentColumn; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша вправо
-                    case ConsoleKey.LeftArrow: if (this.currentColumn - 1 >= 0) { --this.currentColumn; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша влево
+                    case ConsoleKey.UpArrow: if (this.currentRow - 1 >= 0) { --this.currentRow; }; this.ShowField((short) this.currentRow, (short) this.currentColumn, 'X'); break; // нажата клавиша вверх
+                    case ConsoleKey.DownArrow: if (this.currentRow + 1 < this.maxPosition) { ++this.currentRow; }; this.ShowField((short)this.currentRow, (short)this.currentColumn, 'X'); break; // нажата клавиша вниз
+                    case ConsoleKey.RightArrow: if (this.currentColumn + 1 < this.maxPosition) { ++this.currentColumn; }; this.ShowField((short)this.currentRow, (short)this.currentColumn, 'X'); break; // нажата клавиша вправо
+                    case ConsoleKey.LeftArrow: if (this.currentColumn - 1 >= 0) { --this.currentColumn; }; this.ShowField((short)this.currentRow, (short)this.currentColumn, 'X'); break; // нажата клавиша влево
                     case ConsoleKey.Enter: if (this.EditField(this.currentRow, this.currentColumn, 'X')) { return true; } return false; // нажата клавиша enter
 
-                    default: this.ShowField((short)this.currentRow, (short)this.currentColumn); break;
+                    default: this.ShowField((short)this.currentRow, (short)this.currentColumn, 'X'); break;
                 }
             }
         }
 
 
+        private bool Bot()
+        {
+            do
+            {
+                Console.Clear(); Console.WriteLine("КРЕСТИКИ-НОЛИКИ (ХОД БОТА)");
+
+                this.currentRow = (ushort) this.random.Next(0, this.maxPosition);
+                this.currentColumn = (ushort) this.random.Next(0, this.maxPosition);
+            }
+            while (!this.EditField(this.currentRow, this.currentColumn, 'O'));
+
+            this.ShowField((short) this.currentRow, (short) this.currentColumn, 'O');
+            Console.Write("\nДля продолжения нажмите любую стрелочку..");
+
+            return true;
+        }
+
+
+        Random random;
+
         private ushort fieldSize;
         private char[,] field;
 
+
         public NaughtsAndCrosses() 
         {
+            this.random = new Random();
             this.fieldSize = 3;
             this.currentRow = 0;
             this.currentColumn = 0;
@@ -49,57 +74,45 @@ namespace GameWithBot
             }
         }
 
+
         public void Playing()
         {
-            Console.WriteLine("X ИГРА КРЕСТИКИ-НОЛИКИ 0");
-            Console.WriteLine("Выберите сторону, за которую будете играть: ");
-            Console.WriteLine("За крестики (X)");
-            Console.WriteLine("За нолики (O)\n");
+            Console.WriteLine("КРЕСТИКИ-НОЛИКИ\n");
+            Console.WriteLine("* вы играете за крестики (X)");
+            Console.WriteLine("* ваш компьюетрный соперник за нолики (O)\n");
+            byte whoFirst = (byte) this.random.Next(0, 2);
+            Console.WriteLine($"* методом рандома было решено, что {(whoFirst == 0 ? "вы ходите первым" : "бот ходит первым")}");
+            Console.WriteLine("* упрвление реализовано стрелочками и клавишей enter\n");
+            Console.Write("Для продолженния нажмите любую клавишу.."); Console.ReadKey();
 
-            char player = 'X';
-            char bot = 'O';
-
-            Random random = new Random();
-            ushort tempRow;
-            ushort tempColumn;
-
-            for (int i = 0; i < this.fieldSize * this.fieldSize && FindWinner() == false; ++i)
-            //while (!FindWinner())
-            {
-                this.ShowField();
-
-                bool temp = true;
-                ConsoleKeyInfo key;
-                while (temp == true)
+            if (whoFirst == 0) 
+            {       
+                for (int i = 0; i < 9; ++i)
                 {
-                    key = Console.ReadKey(); // считывание значения нажатой клавиши
-                    Console.Clear(); Console.Write("ХОД ИГРОКА\n\n");
-                    switch (key.Key)
-                    {
-                        case ConsoleKey.UpArrow: if (this.currentRow - 1 >= 0) { --this.currentRow; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша вверх
-                        case ConsoleKey.DownArrow: if (this.currentRow + 1 < this.maxPosition) { ++this.currentRow; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша вниз
-                        case ConsoleKey.RightArrow: if (this.currentColumn + 1 < this.maxPosition) { ++this.currentColumn; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша вправо
-                        case ConsoleKey.LeftArrow: if (this.currentColumn - 1 >= 0) { --this.currentColumn; }; this.ShowField((short)this.currentRow, (short)this.currentColumn); break; // нажата клавиша влево
-                        case ConsoleKey.Enter: if (this.EditField(this.currentRow, this.currentColumn, player)) { temp = false; break; } Console.WriteLine("ЭТА КЛЕТКА ЗАНЯТА!"); break; // нажата клавиша enter
+                    while (!this.Player()) { this.ShowField((short)this.currentRow, (short)this.currentColumn, 'X'); Console.WriteLine("\nКлетка занята!"); Console.WriteLine("Для продолжения нажмите любую стрелочку.."); }
+                    if (this.FindWinner() == true) { return; }
 
-                        default: this.ShowField((short) this.currentRow, (short) this.currentColumn); break;
-                    }
+                    while (!this.Bot()) { }
+                    if (this.FindWinner() == true) { return; }
                 }
+            }
 
-
-                tempRow = (ushort )random.Next(0, this.fieldSize);
-                tempColumn = (ushort) random.Next(0, this.fieldSize);
-
-                while (!this.EditField(tempRow, tempColumn, bot))
+            if (whoFirst == 1)
+            {
+                for (int i = 0; i < 9; ++i)
                 {
-                    tempRow = (ushort)random.Next(0, this.fieldSize);
-                    tempColumn = (ushort)random.Next(0, this.fieldSize);
+                    while (!this.Bot()) { }
+                    if (this.FindWinner() == true) { return; }
+
+                    while (!this.Player()) { this.ShowField((short) this.currentRow, (short) this.currentColumn, 'O');  Console.WriteLine("\nКлетка занята!"); Console.WriteLine("Для продолжения нажмите любую стрелочку.."); }
+                    if (this.FindWinner() == true) { return; }
                 }
             }
 
             Console.WriteLine("\nНичья!");
             return;
         }
+
 
         private bool FindWinner()
         {
@@ -114,6 +127,7 @@ namespace GameWithBot
                 (this.field[0, 0] == 'X' && this.field[1, 1] == 'X' && this.field[2, 2] == 'X') ||
                 (this.field[2, 0] == 'X' && this.field[1, 1] == 'X' && this.field[0, 2] == 'X'))
             {
+                Console.Clear();
                 this.ShowField();
                 Console.Write("\nИгрок выиграл!");
                 return true;
@@ -131,6 +145,7 @@ namespace GameWithBot
                 (this.field[0, 0] == 'O' && this.field[1, 1] == 'O' && this.field[2, 2] == 'O') ||
                 (this.field[2, 0] == 'O' && this.field[1, 1] == 'O' && this.field[0, 2] == 'O'))
             {
+                Console.Clear();
                 this.ShowField();
                 Console.Write("\nБот выиграл!");
                 return true;
@@ -138,6 +153,7 @@ namespace GameWithBot
 
             return false;
         }
+
 
         public bool EditField(ushort row, ushort column, char who)
         {
@@ -149,7 +165,8 @@ namespace GameWithBot
             return false;
         }
 
-        public void ShowField(short row = -1, short column = -1)
+
+        public void ShowField(short row = -1, short column = -1, char who = 'X')
         {
             Console.WriteLine();
             for (int i = 0; i < this.fieldSize; ++i)
@@ -160,7 +177,7 @@ namespace GameWithBot
                     {
                         if (this.field[i, j] == ' ') // цвет текущей ячейки меняет, в зависимости, занята ли она 
                         {
-                            Console.ForegroundColor = ConsoleColor.Green; Console.Write(" *"); Console.ResetColor(); // если свободна, то цвет зелёный
+                            Console.ForegroundColor = ConsoleColor.Green; Console.Write($" {who}"); Console.ResetColor(); // если свободна, то цвет зелёный
                         }
 
                         else
