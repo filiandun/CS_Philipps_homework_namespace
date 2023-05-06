@@ -9,9 +9,12 @@ namespace GameWithBot
         private ushort currentColumn;
         private ushort maxPosition;
 
+        int tempCount = 0;
+
         private bool Player()
         {
             ConsoleKeyInfo key;
+            ++this.tempCount;
 
             while (true)
             {
@@ -55,6 +58,7 @@ namespace GameWithBot
         private ushort fieldSize;
         private char[,] field;
 
+        private byte count;
 
         public NaughtsAndCrosses() 
         {
@@ -63,6 +67,7 @@ namespace GameWithBot
             this.currentRow = 0;
             this.currentColumn = 0;
             this.maxPosition = this.fieldSize;
+            this.count = 0;
 
             this.field = new char[this.fieldSize, this.fieldSize];
             for (int i = 0; i < this.fieldSize; ++i)
@@ -78,18 +83,21 @@ namespace GameWithBot
         public void Playing()
         {
             Console.WriteLine("КРЕСТИКИ-НОЛИКИ\n");
+
             Console.WriteLine("* вы играете за крестики (X)");
             Console.WriteLine("* ваш компьюетрный соперник за нолики (O)\n");
-            byte whoFirst = (byte) this.random.Next(0, 2);
+
+            byte whoFirst = 1;//(byte) this.random.Next(0, 2);
             Console.WriteLine($"* методом рандома было решено, что {(whoFirst == 0 ? "вы ходите первым" : "бот ходит первым")}");
             Console.WriteLine("* упрвление реализовано стрелочками и клавишей enter\n");
-            Console.Write("Для продолженния нажмите любую клавишу.."); Console.ReadKey();
+
+            Console.Write("Для продолженния нажмите любую стрелочку.."); Console.ReadKey();
 
             if (whoFirst == 0) 
             {       
                 for (int i = 0; i < 9; ++i)
                 {
-                    while (!this.Player()) { this.ShowField((short)this.currentRow, (short)this.currentColumn, 'X'); Console.WriteLine("\nКлетка занята!"); Console.WriteLine("Для продолжения нажмите любую стрелочку.."); }
+                    while (!this.Player()) { this.ShowField((short)this.currentRow, (short)this.currentColumn, 'X'); Console.WriteLine("\nКлетка занята!"); Console.Write("Для продолжения нажмите любую стрелочку.."); }
                     if (this.FindWinner() == true) { return; }
 
                     while (!this.Bot()) { }
@@ -104,7 +112,7 @@ namespace GameWithBot
                     while (!this.Bot()) { }
                     if (this.FindWinner() == true) { return; }
 
-                    while (!this.Player()) { this.ShowField((short) this.currentRow, (short) this.currentColumn, 'O');  Console.WriteLine("\nКлетка занята!"); Console.WriteLine("Для продолжения нажмите любую стрелочку.."); }
+                    while (!this.Player()) { this.ShowField((short) this.currentRow, (short) this.currentColumn, 'O');  Console.WriteLine("\nКлетка занята!"); Console.Write("Для продолжения нажмите любую стрелочку.."); }
                     if (this.FindWinner() == true) { return; }
                 }
             }
@@ -116,6 +124,8 @@ namespace GameWithBot
 
         private bool FindWinner()
         {
+            ++this.count;
+
             if ((this.field[0, 0] == 'X' && this.field[0, 1] == 'X' && this.field[0, 2] == 'X') ||
                 (this.field[1, 0] == 'X' && this.field[1, 1] == 'X' && this.field[1, 2] == 'X') ||
                 (this.field[2, 0] == 'X' && this.field[2, 1] == 'X' && this.field[2, 2] == 'X') ||
@@ -128,8 +138,12 @@ namespace GameWithBot
                 (this.field[2, 0] == 'X' && this.field[1, 1] == 'X' && this.field[0, 2] == 'X'))
             {
                 Console.Clear();
+                Console.WriteLine("КРЕСТИКИ-НОЛИКИ");
                 this.ShowField();
                 Console.Write("\nИгрок выиграл!");
+
+                Console.Write($"\n\n{tempCount}\n\n");
+
                 return true;
             }
 
@@ -146,8 +160,24 @@ namespace GameWithBot
                 (this.field[2, 0] == 'O' && this.field[1, 1] == 'O' && this.field[0, 2] == 'O'))
             {
                 Console.Clear();
+                Console.WriteLine("КРЕСТИКИ-НОЛИКИ");
                 this.ShowField();
                 Console.Write("\nБот выиграл!");
+
+                Console.Write($"\n\n{tempCount}\n\n");
+
+                return true;
+            }
+
+            if (this.count == this.fieldSize * this.fieldSize)
+            {
+                Console.Clear();
+                Console.Write("КРЕСТИКИ-НОЛИКИ\n");
+                this.ShowField();
+                Console.Write("\nНичья!");
+
+                Console.Write($"\n\n{tempCount}\n\n");
+
                 return true;
             }
 
