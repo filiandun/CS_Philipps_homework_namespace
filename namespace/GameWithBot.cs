@@ -1,19 +1,20 @@
-﻿using System.Globalization;
-
-namespace GameWithBot
+﻿namespace GameWithBot
 {
     public class NaughtsAndCrosses
     {
         Random random; // просто рандом
 
         private byte fieldSize; // размер игрового поля
-        private char[,] field; // иговое поле, в виде двухмерного массива
+        private char[,]? field; // игровое поле, в виде двухмерного массива
 
         private byte currentRow; // текущая строка, где находится "курсор"
         private byte currentColumn; // текущий стобец, где находится "курсор"
         private byte maxPosition; // максимальная позиция, где может находится "курсор"
 
         private byte count; // счётчик того, сколько была вызвана функция findWinner();, конкретно он используется для выдачи ничьи
+
+        private char player; // за кого будет играть игрок
+        private char bot; // за кого будет играть бот
 
 
         //////
@@ -23,21 +24,17 @@ namespace GameWithBot
         {
             this.random = new Random();
 
-            this.fieldSize = 5;
-            this.field = new char[this.fieldSize, this.fieldSize];
-            for (int i = 0; i < this.fieldSize; ++i)
-            {
-                for (int j = 0; j < this.fieldSize; ++j)
-                {
-                    this.field[i, j] = ' ';
-                }
-            }
+            this.fieldSize = 0;
+            this.field = null;
 
             this.currentRow = 0;
             this.currentColumn = 0;
-            this.maxPosition = this.fieldSize;
+            this.maxPosition = 0;
 
             this.count = 0;
+
+            this.player = 'X';
+            this.bot = 'O';
         }
 
 
@@ -46,14 +43,17 @@ namespace GameWithBot
 
         public void Playing()
         {
+            Console.Clear();
             Console.WriteLine("КРЕСТИКИ-НОЛИКИ\n");
 
-            Console.WriteLine("* вы играете за крестики (X)");
-            Console.WriteLine("* ваш компьюетрный соперник за нолики (O)\n");
+            Console.Write("* введите, за кого будете играть, за крестики (X) или нолики (O): "); this.ChoicingSide();
+            Console.WriteLine($"* ваш компьютерный соперник играет за {(this.bot == 'O' ? "нолики (O)" : "крестики (X)")}\n");
 
-            byte whoFirst = 0; //(byte)this.random.Next(0, 2);
-            Console.WriteLine($"* методом рандома было решено, что {(whoFirst == 0 ? "вы ходите первым" : "бот ходит первым")}");
-            Console.WriteLine("* упрвление реализовано стрелочками и клавишей enter\n");
+            Console.Write($"\n* введите желаемый размер поля игры (диапазон от 2 до 12, рекомендуется 3): "); this.ChoicingFieldSize();
+
+            byte whoFirst = (byte) this.random.Next(0, 2); 
+            Console.WriteLine($"\n* методом рандома было решено, что {(whoFirst == 0 ? "вы ходите первым" : "бот ходит первым")}");
+            Console.WriteLine("* управление реализовано стрелочками и клавишей enter\n");
 
             Console.Write("Для продолженния нажмите любую клавишу.."); Console.ReadKey();
 
@@ -62,27 +62,11 @@ namespace GameWithBot
             {
                 while (true)
                 {
-
-                    //this.field[0, 0] = this.field[0, 1] = this.field[0, 2] = this.field[0, 3] = this.field[0, 4] = 'X'; this.ShowField();
-                    //this.field[1, 0] = this.field[1, 1] = this.field[1, 2] = this.field[1, 3] = this.field[1, 4] = 'X'; this.ShowField();
-                    //this.field[2, 0] = this.field[2, 1] = 'X'; this.ShowField();
-
-                    //this.field[0, 0] = this.field[1, 0] = this.field[2, 0] = this.field[3, 0] = this.field[4, 0] = 'X'; this.ShowField();
-                    //this.field[0, 1] = this.field[1, 1] = this.field[2, 1] = 'X'; this.ShowField();
-                    //this.field[0, 2] = this.field[1, 2] = this.field[2, 2] = 'X'; this.ShowField();
-
-                    //this.field[0, 0] = this.field[1, 1] = this.field[2, 2] = this.field[3, 3] = this.field[4, 4] = 'X';
-                    //this.field[4, 0] = this.field[3, 1] = this.field[2, 2] = this.field[1, 3] = this.field[0, 4] = 'X';
+                    this.PlayerMove();
                     if (this.FindWinner() == true) { return; }
 
-
-
-
-                    // this.PlayerMove();
-                    //if (this.FindWinner() == true) { return; }
-
-                    //this.BotMove();
-                    //if (this.FindWinner() == true) { return; }
+                    this.BotMove();
+                    if (this.FindWinner() == true) { return; }
                 }
             }
 
@@ -104,6 +88,100 @@ namespace GameWithBot
         //////
 
 
+        private void ChoicingSide()
+        {
+            do
+            {
+                Console.Clear();
+                Console.WriteLine("КРЕСТИКИ-НОЛИКИ\n");
+
+                Console.Write("* введите, за кого будете играть, за крестики (X) или нолики (O): ");
+
+                try
+                {
+                    this.player = Convert.ToChar(Console.ReadLine().Trim(' ', '\t')); // Trim убирает пробелы и табуляции
+
+                    if (this.player != 'X' && this.player != 'O')
+                    {
+                        throw new FormatException();
+                    }
+
+                    break;
+                }
+
+                catch (FormatException)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red; Console.WriteLine($"\nОШИБКА: вы ввели что-то не то!"); Console.ResetColor();
+                    Console.Write("Нажите любую клавишу для продолжения.."); Console.ReadKey();
+                }
+                catch (OverflowException oe)
+                {
+                    Console.WriteLine($"ОШИБКА: {oe.Message}");
+                    Console.Write("Нажите любую клавишу для продолжения.."); Console.ReadKey();
+                }
+            }
+            while (true);
+
+            if (this.player == 'O') { this.bot = 'X'; }
+        }
+
+
+        //////
+
+
+        private void ChoicingFieldSize()
+        {
+            do
+            {
+                Console.Clear();
+                Console.WriteLine("КРЕСТИКИ-НОЛИКИ\n");
+
+                Console.WriteLine($"* введите, за кого будете играть, за крестики (X) или нолики (O): {this.player}");
+                Console.WriteLine($"* ваш компьютерный соперник играет за {(this.bot == 'O' ? "нолики (O)" : "крестики (X)")}\n");
+                
+                Console.Write($"* введите желаемый размер поля игры (диапазон от 2 до 12, рекомендуется 3): ");
+
+                try
+                {
+                    this.fieldSize = Convert.ToByte(Console.ReadLine().Trim(' ', '\t')); // Trim убирает пробелы и табуляции
+
+                    if (this.fieldSize < 2 || this.fieldSize > 12)
+                    {
+                        throw new OverflowException();
+                    }
+
+                    break;
+                }
+
+                catch (FormatException)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red; Console.WriteLine($"\nОШИБКА: вы ввели что-то не то!"); Console.ResetColor();
+                    Console.Write("Нажите любую клавишу для продолжения.."); Console.ReadKey();
+                }
+                catch (OverflowException)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red; Console.WriteLine($"\nОШИБКА: вы вышли за дипазон!"); Console.ResetColor();
+                    Console.Write("Нажите любую клавишу для продолжения.."); Console.ReadKey();
+                }
+            }
+            while (true);
+
+
+            this.field = new char[this.fieldSize, this.fieldSize];
+            for (int i = 0; i < this.fieldSize; ++i)
+            {
+                for (int j = 0; j < this.fieldSize; ++j)
+                {
+                    this.field[i, j] = ' ';
+                }
+            }
+            this.maxPosition = this.fieldSize;
+        }
+
+
+        //////
+ 
+
         private void PlayerMove()
         {
             ConsoleKeyInfo key;
@@ -111,7 +189,8 @@ namespace GameWithBot
             do
             {
                 Console.Clear(); Console.WriteLine("КРЕСТИКИ-НОЛИКИ (ВАШ ХОД)");
-                this.ShowField(this.currentRow, this.currentColumn, 'X');
+
+                this.ShowField(this.currentRow, this.currentColumn, this.player);
 
                 key = Console.ReadKey(); // считывание значения нажатой клавиши
 
@@ -122,9 +201,9 @@ namespace GameWithBot
                     case ConsoleKey.RightArrow: if (this.currentColumn + 1 < this.maxPosition) { ++this.currentColumn; }; break; // нажата клавиша вправо
                     case ConsoleKey.LeftArrow: if (this.currentColumn - 1 >= 0) { --this.currentColumn; }; break; // нажата клавиша влево
 
-                    case ConsoleKey.Enter: if (this.EditField(this.currentRow, this.currentColumn, 'X')) { return; } Console.WriteLine("\nКлетка занята!"); Console.Write("Для продолжения нажмите любую клавишу.."); Console.ReadKey(); break; // нажата клавиша enter
+                    case ConsoleKey.Enter: if (this.EditField(this.currentRow, this.currentColumn, this.player)) { return; } Console.WriteLine("\nКлетка занята!"); Console.Write("Для продолжения нажмите любую клавишу.."); Console.ReadKey(); break; // нажата клавиша enter
 
-                    default: this.ShowField(this.currentRow, this.currentColumn, 'X'); break;
+                    default: this.ShowField(this.currentRow, this.currentColumn, this.player); break;
                 }
             }
             while (true);
@@ -136,6 +215,7 @@ namespace GameWithBot
 
         private void BotMove()
         {
+            // ничего умного у бота нет, рандомно рандомно генерируются цифры
             do
             {
                 Console.Clear(); Console.WriteLine("КРЕСТИКИ-НОЛИКИ (ХОД БОТА)");
@@ -143,9 +223,9 @@ namespace GameWithBot
                 this.currentRow = (byte) this.random.Next(0, this.maxPosition);
                 this.currentColumn = (byte) this.random.Next(0, this.maxPosition);
             }
-            while (!this.EditField(this.currentRow, this.currentColumn, 'O'));
+            while (!this.EditField(this.currentRow, this.currentColumn, this.bot));
 
-            this.ShowField(this.currentRow, this.currentColumn, 'O');
+            this.ShowField(this.currentRow, this.currentColumn, this.bot);
             Console.Write("\nДля продолжения нажмите любую стрелочку..");
         }
 
@@ -159,6 +239,7 @@ namespace GameWithBot
 
             byte countForWin = 0;
 
+            // ПРОВЕРКА НА ПОБЕДУ ПО ГОРИЗОНТАЛИ
             for (int i = 0; i < this.fieldSize; ++i)
             {
                 for (int j = 0; j < this.fieldSize - 1; ++j)
@@ -167,21 +248,30 @@ namespace GameWithBot
                     {
                         ++countForWin;
                     }
+                    else
+                    {
+                        break;
+                    }
                 }
 
                 if (countForWin == this.fieldSize - 1)
                 {
                     Console.Clear();
                     Console.WriteLine("КРЕСТИКИ-НОЛИКИ");
+
                     this.ShowField();
-                    Console.Write("\nВЫИГРАЛО ЧТО-ТО ПО ГОРИЗОНТАЛИ");
+
+                    Console.Write($"\nВЫИГРАЛ {(this.field[i, i] == this.player ? "ИГРОК" : "БОТ")}!");
 
                     return true;
                 }
+
                 countForWin = 0;
             }
 
 
+
+            // ПРОВЕРКА НА ПОБЕДУ ПО ВЕРТИКАЛИ
             for (int j = 0; j < this.fieldSize; ++j)
             {
                 for (int i = 0; i < this.fieldSize - 1; ++i)
@@ -190,14 +280,20 @@ namespace GameWithBot
                     {
                         ++countForWin;
                     }
+                    else
+                    {
+                        break;
+                    }
                 }
 
                 if (countForWin == this.fieldSize - 1)
                 {
                     Console.Clear();
                     Console.WriteLine("КРЕСТИКИ-НОЛИКИ");
+
                     this.ShowField();
-                    Console.Write("\nВЫИГРАЛО ЧТО-ТО ПО ВЕРТИКАЛИ");
+
+                    Console.Write($"\nВЫИГРАЛ {(this.field[j, j] == this.player ? "ИГРОК" : "БОТ")}!");
 
                     return true;
                 }
@@ -206,96 +302,74 @@ namespace GameWithBot
 
 
 
+            // ПРОВЕРКА НА ПОБЕДУ ПО ОДНОЙ ДИАГОНАЛИ
             for (int i = 0; i < this.fieldSize - 1; ++i)
             {
                 if (this.field[i, i] == this.field[i + 1, i + 1] && this.field[i, i] != ' ')
                 {
                     ++countForWin;
                 }
+                else
+                {
+                    break;
+                }
             }
 
             if (countForWin == this.fieldSize - 1)
             {
                 Console.Clear();
                 Console.WriteLine("КРЕСТИКИ-НОЛИКИ");
+
                 this.ShowField();
-                Console.Write("\nВЫИГРАЛО ЧТО-ТО КОСОЕ 1");
+
+                Console.Write($"\nВЫИГРАЛ {(this.field[this.fieldSize - 1, this.fieldSize - 1] == this.player ? "ИГРОК" : "БОТ")}!");
 
                 return true;
             }
+
             countForWin = 0;
 
 
 
+            // ПРОВЕРКА НА ПОБЕДУ ПО ВТОРОЙ ДИАГОНАЛИ
             for (int i = 0; i < this.fieldSize - 1; ++i)
             {
                 if (this.field[i, this.fieldSize - i - 1] == this.field[i + 1, this.fieldSize - i - 2] && this.field[i, this.fieldSize - i - 1] != ' ')
                 {
                     ++countForWin;
                 }
+                else
+                {
+                    break;
+                }
             }
-
 
             if (countForWin == this.fieldSize - 1)
             {
                 Console.Clear();
                 Console.WriteLine("КРЕСТИКИ-НОЛИКИ");
+
                 this.ShowField();
-                Console.Write("\nВЫИГРАЛО ЧТО-ТО КОСОЕ 2");
+
+                Console.Write($"\nВЫИГРАЛ {(this.field[this.fieldSize - 1, 0] == this.player ? "ИГРОК" : "БОТ")}!");
 
                 return true;
             }
 
 
-            //if ((this.field[0, 0] == 'X' && this.field[0, 1] == 'X' && this.field[0, 2] == 'X') || // если выиграл игрок
-            //    (this.field[1, 0] == 'X' && this.field[1, 1] == 'X' && this.field[1, 2] == 'X') ||
-            //    (this.field[2, 0] == 'X' && this.field[2, 1] == 'X' && this.field[2, 2] == 'X') ||
 
-            //    (this.field[0, 0] == 'X' && this.field[1, 0] == 'X' && this.field[2, 0] == 'X') ||
-            //    (this.field[0, 1] == 'X' && this.field[1, 1] == 'X' && this.field[2, 1] == 'X') ||
-            //    (this.field[0, 2] == 'X' && this.field[1, 2] == 'X' && this.field[2, 2] == 'X') ||
+            // ПРОВЕРКА НА НИЧЬЮ
+            if (this.count == this.fieldSize * this.fieldSize)
+            {
+                Console.Clear();
+                Console.Write("КРЕСТИКИ-НОЛИКИ\n");
 
-            //    (this.field[0, 0] == 'X' && this.field[1, 1] == 'X' && this.field[2, 2] == 'X') ||
-            //    (this.field[2, 0] == 'X' && this.field[1, 1] == 'X' && this.field[0, 2] == 'X'))
-            //{
-            //    Console.Clear();
-            //    Console.WriteLine("КРЕСТИКИ-НОЛИКИ");
-            //    this.ShowField();
-            //    Console.Write("\nИгрок выиграл!");
+                this.ShowField();
 
-            //    return true;
-            //}
+                Console.Write("\nНичья!");
 
-
-            //if ((this.field[0, 0] == 'O' && this.field[0, 1] == 'O' && this.field[0, 2] == 'O') || // если выиграл бот
-            //    (this.field[1, 0] == 'O' && this.field[1, 1] == 'O' && this.field[1, 2] == 'O') ||
-            //    (this.field[2, 0] == 'O' && this.field[2, 1] == 'O' && this.field[2, 2] == 'O') ||
-
-            //    (this.field[0, 0] == 'O' && this.field[1, 0] == 'O' && this.field[2, 0] == 'O') ||
-            //    (this.field[0, 1] == 'O' && this.field[1, 1] == 'O' && this.field[2, 1] == 'O') ||
-            //    (this.field[0, 2] == 'O' && this.field[1, 2] == 'O' && this.field[2, 2] == 'O') ||
-
-            //    (this.field[0, 0] == 'O' && this.field[1, 1] == 'O' && this.field[2, 2] == 'O') ||
-            //    (this.field[2, 0] == 'O' && this.field[1, 1] == 'O' && this.field[0, 2] == 'O'))
-            //{
-            //    Console.Clear();
-            //    Console.WriteLine("КРЕСТИКИ-НОЛИКИ");
-            //    this.ShowField();
-            //    Console.Write("\nБот выиграл!");
-
-            //    return true;
-            //}
-
-
-            //if (this.count == this.fieldSize * this.fieldSize) // если ничья
-            //{
-            //    Console.Clear();
-            //    Console.Write("КРЕСТИКИ-НОЛИКИ\n");
-            //    this.ShowField();
-            //    Console.Write("\nНичья!");
-
-            //    return true;
-            //}
+                return true;
+            }
 
             return false;
         }
@@ -362,23 +436,10 @@ namespace GameWithBot
                 }
             }
             Console.WriteLine();
-        }    
+        }
+        
+
+        ///////
     }
 }
-
-/*
- * УНИВЕРСАЛЬНОСТЬ В FindWinner() РАБОТАЕТ, ТОЛЬКО ЕЁ НУЖНО ГРАМОТНЕЕ ОФОРМИТЬ
- * ТАКЖЕ СТОИТ ДОБАИТЬ ВЫБОР ЗА КОГО ИГРАТЬ
- * 
- * 
-0 0  0 1  0 2  0 3  0 4
-
-1 0  1 1  1 2  1 3  1 4
-
-2 0  2 1  2 2  2 3  2 4
-
-3 0  3 1  3 2  3 3  3 4
-
-4 0  4 1  4 2  4 3  4 4
-*/
 
